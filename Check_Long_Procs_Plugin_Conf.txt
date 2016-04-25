@@ -1,0 +1,132 @@
+Nagios plugin to check and alert for the long running processes
+
+Plugin name: check_long_procs.pl
+
+Testing the Plugin
+
+printing the version
+
+ajoy@debhost1:~/scripts$ ./check_long_procs.pl -v
+check_long_procs : 1.0
+ajoy@debhost1:~/scripts$ ./check_long_procs.pl --version
+check_long_procs : 1.0
+
+printing the help
+
+ajoy@debhost1:~/scripts$ ./check_long_procs.pl -h
+check_long_procs : 1.0
+Usage: check_long_procs -p <search pattern> -n <search pattern to exclude> [-v] [-h]
+-c <critcal count> = Count of process to send alert, but is optional as the value is hardcoded.
+-p <search pattern> = Search pattern for command grep.
+-n <search pattern to exclude> = Search pattern to exclude from grep.
+-v = Version.
+-h = This screen.
+
+Eg:- check_long_procs -c 0 -p java -n oracle.
+
+Eg:- check_long_procs -c 0 -p "http|ssh" -n "java|grep".
+
+ajoy@debhost1:~/scripts$ ./check_long_procs.pl --help
+check_long_procs : 1.0
+Usage: check_long_procs -p <search pattern> -n <search pattern to exclude> [-v] [-h]
+-c <critcal count> = Count of process to send alert, but is optional as the value is hardcoded.
+-p <search pattern> = Search pattern for command grep.
+-n <search pattern to exclude> = Search pattern to exclude from grep.
+-v = Version.
+-h = This screen.
+
+Eg:- check_long_procs -c 0 -p java -n oracle.
+
+Eg:- check_long_procs -c 0 -p "http|ssh" -n "java|grep".
+
+Traping Invalid options
+
+ajoy@debhost1:~/scripts$ ./check_long_procs.pl -s
+Unknown option: s
+Usage: check_long_procs -p <search pattern> -n <search pattern to exclude> [-v] [-h]
+Eg:- check_long_procs -c 0 -p java -n oracle.
+Eg:- check_long_procs -c 0 -p "http|ssh" -n "java|grep".
+ajoy@debhost1:~/scripts$
+
+ajoy@debhost1:~/scripts$ ./check_long_procs.pl -9
+Unknown option: 9
+Usage: check_long_procs -p <search pattern> -n <search pattern to exclude> [-v] [-h]
+Eg:- check_long_procs -c 0 -p java -n oracle.
+Eg:- check_long_procs -c 0 -p "http|ssh" -n "java|grep".
+ajoy@debhost1:~/scripts$
+
+Traping execution with out options
+
+ajoy@debhost1:~/scripts$ ./check_long_procs.pl
+Usage: check_long_procs -p <search pattern> -n <search pattern to exclude> [-v] [-h]
+Eg:- check_long_procs -c 0 -p java -n oracle.
+Eg:- check_long_procs -c 0 -p "http|ssh" -n "java|grep".
+ajoy@debhost1:~/scripts$
+
+Traping execution with incomplete options
+
+ajoy@debhost1:~/scripts$ ./check_long_procs.pl -p java
+You have to specify a negative pattern to search with the option -n or --negpattern
+Usage: check_long_procs -p <search pattern> -n <search pattern to exclude> [-v] [-h]
+Eg:- check_long_procs -c 0 -p java -n oracle.
+Eg:- check_long_procs -c 0 -p "http|ssh" -n "java|grep".
+ajoy@debhost1:~/scripts$ ./check_long_procs.pl -n java
+You have to specify a pattern to search with the option -p or --pattern
+Usage: check_long_procs -p <search pattern> -n <search pattern to exclude> [-v] [-h]
+Eg:- check_long_procs -c 0 -p java -n oracle.
+Eg:- check_long_procs -c 0 -p "http|ssh" -n "java|grep".
+
+Execution with valid options and the output (in PROD servers)
+
+tsaapp@appprod1:~/ajoy$ ./check_long_procs.pl  -p "java" -n "http"
+CRITICAL - 2 long running processes found: PIDS :- 26673 26671
+tsaapp@appprod1:~/ajoy$ ./check_long_procs.pl  -p "java" -n "ssh"
+CRITICAL - 1 long running processes found: PIDS :- 5344
+tsaapp@appprod1:~/ajoy$ ./check_long_procs.pl  -p "java" -n "http|ssh"
+OK - No long running processes
+
+tsaapp@appdb:~/ajoy$ ./check_long_procs.pl -p dbreplicator -n "ps|grep"
+OK - No long running processes
+tsaapp@appdb:~/ajoy$ ./check_long_procs.pl -p nagios -n "ps|grep"
+CRITICAL - 1 long running processes found: PIDS :- 30508
+
+tsaapp@appweb:~/ajoy$ ./check_long_procs.pl -p listener -n "ps|grep"
+OK - No long running processes
+tsaapp@appweb:~/ajoy$ ./check_long_procs.pl -p sshd -n "ps|grep"
+CRITICAL - 3 long running processes found: PIDS :- 2910 17255 17258
+tsaapp@xml-07:~/ajoy$
+
+
+
+Plugin in action in local test server and host
+Adding the plugin to the nrpe
+ 
+root@debhost1:~# vi /etc/nagios/nrpe.cfg
+
+command[check_long_procs]=/usr/lib/nagios/plugins/check_long_procs -p http -n java
+
+root@debhost1:~# /etc/init.d/nagios-nrpe-server reload
+
+Configuring the plugin to work from nagios server.
+
+[root@centserver ~]# /usr/local/nagios/libexec/check_nrpe -H 192.168.17.128 -c check_long_procs
+OK - No long running processes
+[root@centserver ~]#
+
+Creating service definitions
+
+[root@centserver ~]# cd /usr/local/nagios/etc/linux/
+[root@centserver linux]# vi services.cfg
+
+# Service definition
+define service{
+use nrpe-service
+host_name debhost1
+service_description Long Processes
+contact_groups admins
+check_command check_nrpe!check_long_procs
+
+[root@centserver linux]# /etc/init.d/nagios reload
+Running configuration check...done.
+Reloading nagios configuration...done
+[root@centserver linux]#
