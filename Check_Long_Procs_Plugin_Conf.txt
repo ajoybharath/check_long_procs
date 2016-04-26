@@ -1,4 +1,4 @@
-Nagios plugin to check and alert for the long running processes
+Nagios like plugin to check and alert for the long running processes
 
 Plugin name: check_long_procs.pl
 

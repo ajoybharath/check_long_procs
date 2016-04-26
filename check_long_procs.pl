@@ -3,8 +3,9 @@
 # check_long_procs 2013-02-15
 #
 # check_long_procs v1.0 plugin for nagios
-# This program is distributed under GPL License
-# and comes with out warranty
+# This program is distributed under GPL V2
+# and comes with no warranty
+# use it at your own risks
 # Please submit any bugs to zeal4linux@gmail.com
 # uses the system `ps` command for getting the process durations
 # alerts if the process is running for more than 24 hours
