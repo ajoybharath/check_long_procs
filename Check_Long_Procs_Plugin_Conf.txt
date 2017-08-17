@@ -96,8 +96,6 @@ tsaapp@appweb:~/ajoy$ ./check_long_procs.pl -p sshd -n "ps|grep"
 CRITICAL - 3 long running processes found: PIDS :- 2910 17255 17258
 tsaapp@xml-07:~/ajoy$
 
-
-
 Plugin in action in local test server and host
 Adding the plugin to the nrpe
  
